@@ -39,13 +39,17 @@ import os
 ### ✅ Gesamter Export-, Import- und Handelsvolumen-Verlauf Deutschlands
 """
 
-# Pfad zum Ordner im Google Drive
-ordner_pfad = '/content/drive/MyDrive/DIIHK/Data/Render_Data_Sets/'
+# Die Datei-ID aus dem Google Drive-Link
+file_id = '1aU_MpXvC2cdpM_gbDd3lUpLzfhOkjDpA'
 
-# CSV-Datei einlesen und sicherstellen, dass 'Jahr' als Datum erkannt wird
-df_gesamt_deutschland = pd.read_csv(os.path.join(ordner_pfad, '1gesamt_deutschland.csv'))
+# Erstellen des direkten Download-Links
+url = f"https://drive.google.com/uc?id={file_id}"
 
-df_gesamt_deutschland
+# Die Datei herunterladen und speichern
+gdown.download(url, '1gesamt_deutschland.csv', quiet=False)
+
+# CSV-Datei einlesen und in einem DataFrame speichern
+df_gesamt_deutschland = pd.read_csv('1gesamt_deutschland.csv')
 
 # Dash-App erstellen
 app = dash.Dash(__name__)
