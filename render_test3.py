@@ -26,16 +26,22 @@ import os
 ### Gesamter Export-, Import- und Handelsvolumen-Verlauf Deutschlands
 
 # Die Datei-ID aus dem Google Drive-Link
-file_id = '1aU_MpXvC2cdpM_gbDd3lUpLzfhOkjDpA'
+#file_id = '1aU_MpXvC2cdpM_gbDd3lUpLzfhOkjDpA'
 
 # Erstellen des direkten Download-Links
-url = f"https://drive.google.com/uc?id={file_id}"
+#url = f"https://drive.google.com/uc?id={file_id}"
 
 # Die Datei herunterladen und speichern
-gdown.download(url, '1gesamt_deutschland.csv', quiet=False)
+#gdown.download(url, '1gesamt_deutschland.csv', quiet=False)
 
 # CSV-Datei einlesen und in einem DataFrame speichern
-df_gesamt_deutschland = pd.read_csv('1gesamt_deutschland.csv')
+#df_gesamt_deutschland = pd.read_csv('1gesamt_deutschland.csv')
+
+
+
+df_gesamt_deutschland = pd.read_csv('data/1gesamt_deutschland.csv')
+
+
 
 # Dash-App erstellen
 app = dash.Dash(__name__)
