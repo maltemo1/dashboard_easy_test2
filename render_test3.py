@@ -9,7 +9,6 @@ Original file is located at
 # Vorbereitende Schritte
 """
 
-!pip install dash pandas plotly
 
 import dash
 from dash import dcc, html
