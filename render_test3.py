@@ -1,13 +1,9 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html
+from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-from flask import Flask
-
-server = Flask(__name__)
-
-@server.route("/", methods=["HEAD"])
-def handle_head():
-    return "", 200
+import pandas as pd
+import plotly.graph_objects as go
 
 app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
