@@ -1,22 +1,22 @@
 import dash
-from dash import dcc, html, Input, Output
-import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-# Kategorien-Struktur definieren
-categories = {
+sidebar_structure = {
     "Überblick über Deutschlands Handel": {
         "Gesamtüberblick seit 2008 bis 2024": [],
         "Überblick nach bestimmtem Jahr": []
     },
     "Länderanalyse": {
         "Gesamtüberblick seit 2008 bis 2024": [],
-        "Überblick nach bestimmtem Jahr": {
-            "Anzeige über Handelsbilanz-Überschuss bzw. -Defizit und Ranking des Landes (im Vergleich zu anderen Ländern)": [],
-            "Monatlicher Export-, Import- und Handelsvolumen-Verlauf mit Deutschland": [],
-            "Top 10 Export- und Importwaren": []
-        },
+        "Überblick nach bestimmtem Jahr": [
+            "Anzeige_Handelsbilanz_Ueberschuss_Defizit_Ranking",
+            "Monatlicher_Export_Import_Handelsvolumen_Verlaub",
+            "Top_10_Export_Importwaren"
+        ],
         "Überblick nach bestimmter Ware": [],
         "Überblick nach bestimmtem Jahr und Ware": [],
         "Überblick nach bestimmtem Zeitraum und Waren und Zeitraum": []
@@ -30,70 +30,47 @@ categories = {
     }
 }
 
-# Layout der Sidebar
-sidebar = html.Div([
-    html.H2("Navigation", className="display-4"),
-    html.Hr(),
-    html.Div([
-        dbc.Button(
-            category, id=f"category-{category}", color="primary", className="mb-2", n_clicks=0
+def generate_sidebar():
+    sidebar = []
+    for main_category, subcategories in sidebar_structure.items():
+        subcategory_elements = []
+        for subcategory, subsubcategories in subcategories.items():
+            if subsubcategories:
+                subsub_elements = [
+                    html.Li(html.A(subsub, href=f"#{subsub}"), className="nav-subsubitem")
+                    for subsub in subsubcategories
+                ]
+                subcategory_elements.append(
+                    html.Li([
+                        html.A(subcategory, href=f"#{subcategory}", className="nav-subitem"),
+                        html.Ul(subsub_elements, className="nav-subsublist")
+                    ])
+                )
+            else:
+                subcategory_elements.append(html.Li(html.A(subcategory, href=f"#{subcategory}"), className="nav-subitem"))
+        sidebar.append(
+            html.Li([
+                html.A(main_category, href=f"#{main_category}", className="nav-item"),
+                html.Ul(subcategory_elements, className="nav-sublist")
+            ])
         )
-        for category in categories.keys()
-    ], className="d-grid gap-2"),
-    html.Div(id="subcategory-container")
-], className="sidebar")
-
-# Callback für das Anzeigen der Unterkategorien
-@app.callback(
-    Output("subcategory-container", "children"),
-    [Input(f"category-{category}", "n_clicks") for category in categories.keys()]
-)
-def display_subcategories(*clicks):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return ""
-    
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    category = button_id.replace("category-", "")
-    
-    subcategories = categories.get(category, {})
-    return html.Div([
-        dbc.Button(
-            subcategory, id=f"subcategory-{subcategory}", color="secondary", className="mb-1", n_clicks=0
-        )
-        for subcategory in subcategories.keys()
-    ], className="d-grid gap-2")
-
-# Callback für das Anzeigen der Sub-Subkategorien
-@app.callback(
-    Output("subcategory-container", "children", allow_duplicate=True),
-    [Input(f"subcategory-{subcategory}", "n_clicks") for subcategory in categories["Länderanalyse"]["Überblick nach bestimmtem Jahr"].keys()],
-    prevent_initial_call=True
-)
-def display_sub_subcategories(*clicks):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return ""
-    
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    subcategory = button_id.replace("subcategory-", "")
-    
-    sub_subcategories = categories["Länderanalyse"].get("Überblick nach bestimmtem Jahr", {}).get(subcategory, [])
-    return html.Div([
-        dbc.Button(
-            sub_subcategory, id=f"sub-subcategory-{sub_subcategory}", color="info", className="mb-1", n_clicks=0
-        )
-        for sub_subcategory in sub_subcategories
-    ], className="d-grid gap-2")
+    return html.Ul(sidebar, className="nav-list")
 
 app.layout = html.Div([
-    dbc.Container([
-        dbc.Row([
-            dbc.Col(sidebar, width=3),
-            dbc.Col(html.Div("Inhalt des Dashboards"), width=9)
-        ])
-    ])
+    html.Nav(generate_sidebar(), className="sidebar"),
+    html.Div(id="page-content")
 ])
+
+@app.callback(
+    Output("page-content", "children"),
+    [Input(f"{subcategory}", "n_clicks") for main_category in sidebar_structure.values() for subcategory in main_category]
+)
+def display_page(*args):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return "Wählen Sie eine Kategorie aus."
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    return html.Div(f"Inhalt für {button_id}")
 
 if __name__ == "__main__":
     app.run_server(debug=True)
