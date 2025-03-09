@@ -31,16 +31,20 @@ categories = {
     }
 }
 
-# Funktion, um Unterkategorien zu rendern
+# Funktion, um Subkategorien zu rendern
 def render_subcategories(subcategories):
     return [
         dbc.AccordionItem(
-            dbc.Button(
-                subcategory, id=f"subcategory-{subcategory}", color="secondary", className="mb-1", n_clicks=0
-            ),
+            dbc.Accordion([
+                *render_subcategories(subsubcategories)
+                if isinstance(subsubcategories, dict)
+                else dbc.Button(
+                    subsubcategories, id=f"subcategory-{subsubcategories}", color="secondary", className="mb-1", n_clicks=0
+                )
+            ], start_collapsed=True),
             title=subcategory
         )
-        for subcategory in subcategories.keys()
+        for subcategory, subsubcategories in subcategories.items()
     ]
 
 # Layout der Sidebar
