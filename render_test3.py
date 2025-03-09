@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html
 import dash_bootstrap_components as dbc
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -33,15 +33,24 @@ categories = {
 
 # Funktion, um Unterkategorien zu rendern
 def render_subcategories(subcategories):
-    return [
-        dbc.AccordionItem(
-            dbc.Accordion([
-                *render_subcategories(subsubcategories) if isinstance(subsubcategories, dict) else html.Div()
-            ], start_collapsed=True),
-            title=subcategory
-        )
-        for subcategory, subsubcategories in subcategories.items()
-    ]
+    items = []
+    for subcategory, subsubcategories in subcategories.items():
+        if isinstance(subsubcategories, dict) and subsubcategories:
+            items.append(
+                dbc.AccordionItem(
+                    dbc.Accordion(
+                        render_subcategories(subsubcategories), start_collapsed=True
+                    ),
+                    title=subcategory
+                )
+            )
+        else:
+            items.append(
+                dbc.AccordionItem(
+                    html.Div(subcategory), title=subcategory
+                )
+            )
+    return items
 
 # Layout der Sidebar
 sidebar = html.Div([
@@ -49,9 +58,9 @@ sidebar = html.Div([
     html.Hr(),
     dbc.Accordion([
         dbc.AccordionItem(
-            dbc.Accordion([
-                *render_subcategories(subcategories)
-            ], start_collapsed=True),
+            dbc.Accordion(
+                render_subcategories(subcategories)
+            , start_collapsed=True),
             title=category
         )
         for category, subcategories in categories.items()
