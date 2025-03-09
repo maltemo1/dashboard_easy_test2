@@ -46,33 +46,30 @@ def create_nav_structure():
         }
     }
 
-# Funktion zum Rendern der Sidebar
 categories = create_nav_structure()
 
 def render_sidebar(categories):
     def create_items(subcategories):
         items = []
         for name, value in subcategories.items():
-            if isinstance(value, dict):  # Falls weitere Unterkategorien existieren
-                sub_items = [
-                    html.A(sub_name, href=sub_value, style={"textDecoration": "none", "color": "black", "paddingLeft": "10px"})
-                    for sub_name, sub_value in value.items()
-                ]
+            if isinstance(value, dict):
                 items.append(
                     dbc.AccordionItem(
-                        html.Div(sub_items),
+                        dbc.Accordion(create_items(value), start_collapsed=True),
                         title=name
                     )
                 )
-            else:  # Falls es sich um eine klickbare Subkategorie handelt
+            else:
                 items.append(
-                    html.A(name, href=value, style={"textDecoration": "none", "color": "black", "display": "block", "padding": "5px 10px"})
+                    html.Div(
+                        html.A(name, href=value, style={"textDecoration": "none", "color": "black", "padding": "5px", "display": "block"})
+                    )
                 )
         return items
     
     return dbc.Accordion([
         dbc.AccordionItem(
-            html.Div(create_items(subcategories)),
+            dbc.Accordion(create_items(subcategories), start_collapsed=True),
             title=category
         )
         for category, subcategories in categories.items()
