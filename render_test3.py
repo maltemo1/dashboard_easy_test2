@@ -31,16 +31,12 @@ categories = {
     }
 }
 
-# Funktion, um Subkategorien zu rendern
+# Funktion, um Unterkategorien zu rendern
 def render_subcategories(subcategories):
     return [
         dbc.AccordionItem(
             dbc.Accordion([
-                *render_subcategories(subsubcategories)
-                if isinstance(subsubcategories, dict)
-                else dbc.Button(
-                    subsubcategories, id=f"subcategory-{subsubcategories}", color="secondary", className="mb-1", n_clicks=0
-                )
+                *render_subcategories(subsubcategories) if isinstance(subsubcategories, dict) else html.Div()
             ], start_collapsed=True),
             title=subcategory
         )
