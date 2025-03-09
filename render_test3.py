@@ -9,18 +9,40 @@ server = app.server
 def create_nav_structure():
     return {
         "Überblick über Deutschlands Handel": {
-            "Gesamtüberblick seit 2008 bis 2024": "#",
-            "Überblick nach bestimmtem Jahr": "#",
+            "Gesamtüberblick seit 2008 bis 2024": {
+                "Gesamter Export-, Import- und Handelsvolumen-Verlauf Deutschlands": "#"
+            },
+            "Überblick nach bestimmtem Jahr": {
+                "Monatlicher Handelsverlauf": "#",
+                "Top 10 Handelspartner": "#",
+                "Länder mit größten Export- und Importzuwächsen (absolut)": "#",
+                "Länder mit größten Export- und Importzuwächsen (relativ)": "#",
+                "Top 10 Waren": "#",
+                "Waren mit größten Export- und Importzuwächsen (absolut)": "#",
+                "Waren mit größten Export- und Importzuwächsen (relativ)": "#",
+            }
         },
         "Länderanalyse": {
-            "Gesamtüberblick seit 2008 bis 2024": "#",
-            "Überblick nach bestimmtem Jahr": "#",
-            "Überblick nach bestimmter Ware": "#",
+            "Gesamtüberblick seit 2008 bis 2024": {
+                "Gesamter Export-, Import- und Handelsvolumen-Verlauf": "#",
+                "Vergleich mit anderen Ländern": "#",
+                "Export- und Importwachstumsrate": "#",
+                "Platzierung im Ranking": "#",
+                "Deutschlands Top 10 Waren im Handel": "#",
+            },
+            "Überblick nach bestimmtem Jahr": {
+                "Handelsbilanz & Ranking": "#",
+                "Monatlicher Handelsverlauf": "#",
+                "Top 10 Export- und Importwaren": "#",
+                "Top 4 Waren nach Differenz zum Vorjahr": "#",
+                "Top 4 Waren nach Wachstum zum Vorjahr": "#",
+            }
         },
         "Warenanalyse": {
-            "Gesamtüberblick seit 2008 bis 2024": "#",
-            "Überblick nach bestimmtem Jahr": "#",
-            "Überblick nach bestimmtem Land": "#",
+            "Gesamtüberblick seit 2008 bis 2024": {
+                "Gesamter Export- und Importverlauf": "#",
+                "Top 5 Export- und Importländer": "#",
+            }
         }
     }
 
@@ -28,19 +50,33 @@ def create_nav_structure():
 categories = create_nav_structure()
 
 def render_sidebar(categories):
-    items = []
-    for category, subcategories in categories.items():
-        subcategory_links = [
-            html.A(name, href=link, style={"display": "block", "padding": "5px 10px", "textDecoration": "none", "color": "black"})
-            for name, link in subcategories.items()
-        ]
-        items.append(
-            html.Div([
-                html.H5(category, style={"marginTop": "10px"}),
-                html.Div(subcategory_links, style={"paddingLeft": "10px"})
-            ])
+    def create_items(subcategories):
+        items = []
+        for name, value in subcategories.items():
+            if isinstance(value, dict):  # Falls weitere Unterkategorien existieren
+                sub_items = [
+                    html.A(sub_name, href=sub_value, style={"textDecoration": "none", "color": "black", "paddingLeft": "10px"})
+                    for sub_name, sub_value in value.items()
+                ]
+                items.append(
+                    dbc.AccordionItem(
+                        html.Div(sub_items),
+                        title=name
+                    )
+                )
+            else:  # Falls es sich um eine klickbare Subkategorie handelt
+                items.append(
+                    html.A(name, href=value, style={"textDecoration": "none", "color": "black", "display": "block", "padding": "5px 10px"})
+                )
+        return items
+    
+    return dbc.Accordion([
+        dbc.AccordionItem(
+            html.Div(create_items(subcategories)),
+            title=category
         )
-    return html.Div(items)
+        for category, subcategories in categories.items()
+    ], start_collapsed=True)
 
 sidebar = html.Div([
     html.H2("Navigation", className="display-4"),
