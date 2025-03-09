@@ -1,97 +1,77 @@
 import dash
-from dash import dcc, html, Input, Output
-import dash_bootstrap_components as dbc
+import dash_html_components as html
+import dash_core_components as dcc
+from dash.dependencies import Input, Output
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+# Initialisierung der Dash-App
+app = dash.Dash(__name__)
 server = app.server
 
-# Kategorien-Struktur
-categories = {
-    "Überblick über Deutschlands Handel": {
-        "Gesamtüberblick seit 2008 bis 2024": [],
-        "Überblick nach bestimmtem Jahr": []
+# Struktur der Navigation mit Kategorien, Unterkategorien und Sub-Unterkategorien
+navigation = {
+    "Handelsstatistiken": {
+        "Importe": {"Deutschland - Iran": "#", "Deutschland - EU": "#"},
+        "Exporte": {"Deutschland - Iran": "#", "Deutschland - EU": "#"},
     },
-    "Länderanalyse": {
-        "Gesamtüberblick seit 2008 bis 2024": [],
-        "Überblick nach bestimmtem Jahr": {
-            "Anzeige über Handelsbilanz-Überschuss bzw. -Defizit und Ranking des Landes": "#",
-            "Monatlicher Export-, Import- und Handelsvolumen-Verlauf mit Deutschland": "#",
-            "Top 10 Export- und Importwaren": "#"
-        },
-        "Überblick nach bestimmter Ware": [],
-        "Überblick nach bestimmtem Jahr und Ware": []
+    "Wirtschaftsanalysen": {
+        "Markttrends": {"Automobilindustrie": "#", "Pharmaindustrie": "#"},
+        "Wettbewerbsfähigkeit": {"Unternehmensanalysen": "#", "Branchenreports": "#"},
     },
-    "Warenanalyse": {
-        "Gesamtüberblick seit 2008 bis 2024": [],
-        "Überblick nach bestimmtem Jahr": [],
-        "Überblick nach bestimmtem Land": []
-    }
+    "Politische Rahmenbedingungen": {
+        "Handelsabkommen": {"EU - Iran Abkommen": "#", "Deutschland - Iran Verträge": "#"},
+        "Sanktionen": {"Aktuelle Maßnahmen": "#", "Historische Entwicklungen": "#"},
+    },
 }
 
-# Layout der Sidebar
-sidebar = html.Div([
-    html.H2("Navigation", className="display-4"),
-    html.Hr(),
-    dbc.Accordion(
-        [
-            dbc.AccordionItem(
-                [
-                    dbc.Accordion(
-                        [
-                            dbc.AccordionItem(
-                                html.Div(
-                                    [
-                                        dbc.Button(
-                                            subcategory, 
-                                            id={"type": "toggle-subcategory", "index": subcategory}, 
-                                            color="link", className="mb-1"
-                                        ),
-                                        dbc.Collapse(
-                                            html.Div(
-                                                [
-                                                    html.A(name, href=link, target="_blank", className="d-block")
-                                                    for name, link in subsubcategories.items()
-                                                ],
-                                            ),
-                                            id={"type": "collapse-subcategory", "index": subcategory},
-                                            is_open=False
-                                        )
-                                    ]
-                                ),
-                                title=subcategory
-                            )
-                            for subcategory, subsubcategories in subcategories.items()
-                        ], start_collapsed=True
-                    )
-                ],
-                title=category
-            )
-            for category, subcategories in categories.items()
-        ], start_collapsed=True
-    )
-], className="sidebar")
-
+# Layout der App mit versteckten Unterkategorien und Sub-Unterkategorien
 app.layout = html.Div([
-    dbc.Container([
-        dbc.Row([
-            dbc.Col(sidebar, width=3),
-            dbc.Col(html.Div("Inhalt des Dashboards"), width=9)
-        ])
-    ])
+    html.H1("Dashboard Navigation"),
+    html.Div(id="nav-container"),
+    dcc.Store(id="selected-category", data=""),
+    dcc.Store(id="selected-subcategory", data=""),
 ])
 
-# Callbacks zum Öffnen/Schließen der Subkategorien
 @app.callback(
-    Output({"type": "collapse-subcategory", "index": dash.dependencies.ALL}, "is_open"),
-    Input({"type": "toggle-subcategory", "index": dash.dependencies.ALL}, "n_clicks"),
+    Output("nav-container", "children"),
+    [Input("selected-category", "data"), Input("selected-subcategory", "data"),]
+)
+def update_navigation(selected_category, selected_subcategory):
+    elements = []
+    for category, subcategories in navigation.items():
+        elements.append(html.Button(category, id={"type": "category-button", "index": category}))
+        
+        if selected_category == category:
+            for subcategory, subsubcategories in subcategories.items():
+                elements.append(html.Button("-- " + subcategory, id={"type": "subcategory-button", "index": subcategory}))
+                
+                if selected_subcategory == subcategory:
+                    if isinstance(subsubcategories, dict):
+                        for name, link in subsubcategories.items():
+                            elements.append(html.A("---- " + name, href=link, target="_blank"))
+    
+    return elements
+
+@app.callback(
+    Output("selected-category", "data"),
+    [Input({"type": "category-button", "index": dash.dependencies.ALL}, "n_clicks")],
     prevent_initial_call=True
 )
-def toggle_subcategory(n_clicks):
+def select_category(n_clicks):
     ctx = dash.callback_context
     if not ctx.triggered:
-        return [False] * len(n_clicks)
-    index = ctx.triggered[0]["prop_id"].split(".")[0]
-    return [not n if idx == index else False for idx, n in zip(n_clicks, n_clicks)]
+        return ""
+    return ctx.triggered[0]["prop_id"].split(".")[0]
+
+@app.callback(
+    Output("selected-subcategory", "data"),
+    [Input({"type": "subcategory-button", "index": dash.dependencies.ALL}, "n_clicks")],
+    prevent_initial_call=True
+)
+def select_subcategory(n_clicks):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return ""
+    return ctx.triggered[0]["prop_id"].split(".")[0]
 
 if __name__ == "__main__":
     app.run_server(debug=True)
